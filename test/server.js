@@ -49,6 +49,42 @@ describe('server', function () {
   });
 
   describe('handshake', function () {
+    it('should send the io cookie', function (done) {
+      var engine = listen(function (port) {
+        request.get('http://localhost:%d/engine.io/default/'.s(port))
+          .send({ transport: 'polling' })
+          .end(function (res) {
+            // hack-obtain sid
+            var sid = res.text.match(/"sid":"([0-9]+)"/)[1];
+            expect(res.headers['set-cookie'][0]).to.be('io=' + sid);
+            done();
+          });
+      });
+    });
+
+    it('should send the io cookie custom name', function (done) {
+      var engine = listen({ cookie: 'woot' }, function (port) {
+        request.get('http://localhost:%d/engine.io/default/'.s(port))
+          .send({ transport: 'polling' })
+          .end(function (res) {
+            var sid = res.text.match(/"sid":"([0-9]+)"/)[1];
+            expect(res.headers['set-cookie'][0]).to.be('woot=' + sid);
+            done();
+          });
+      });
+    });
+
+    it('should not send the io cookie', function (done) {
+      var engine = listen({ cookie: false }, function (port) {
+        request.get('http://localhost:%d/engine.io/default/'.s(port))
+          .send({ transport: 'polling' })
+          .end(function (res) {
+            expect(res.headers['set-cookie']).to.be(undefined);
+            done();
+          });
+      });
+    });
+
     it('should register a new client', function (done) {
       var engine = listen({ allowUpgrades: false }, function (port) {
         expect(Object.keys(engine.clients)).to.have.length(0);
@@ -162,8 +198,8 @@ describe('server', function () {
       var engine = listen({ allowUpgrades: false }, function (port) {
         var socket = new eioc.Socket('ws://localhost:%d'.s(port), { query: { a: 'b' } });
         engine.on('connection', function (conn) {
-          expect(conn.req.query).to.have.keys('transport', 'a');
-          expect(conn.req.query.a).to.be('b');
+          expect(conn.request.query).to.have.keys('transport', 'a');
+          expect(conn.request.query.a).to.be('b');
           done();
         });
       });
@@ -390,6 +426,26 @@ describe('server', function () {
             done();
           });
         });
+      });
+    });
+
+    it('should arrive from server to client with ws api', function (done) {
+      var opts = { allowUpgrades: false, transports: ['websocket'] };
+      var engine = listen(opts, function (port) {
+        var socket = new eioc.Socket('ws://localhost:%d'.s(port), { transports: ['websocket'] });
+        engine.on('connection', function (conn) {
+          conn.send('a');
+          conn.close();
+        });
+        socket.onopen = function () {
+          socket.onmessage = function (msg) {
+            expect(msg.data).to.be('a');
+            expect('' + msg == 'a').to.be(true);
+          };
+          socket.onclose = function () {
+            done();
+          };
+        };
       });
     });
 

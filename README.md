@@ -1,4 +1,3 @@
-
 # Engine.IO: the realtime engine
 
 [![Build Status](https://secure.travis-ci.org/LearnBoost/engine.io.png)](http://travis-ci.org/LearnBoost/engine.io)
@@ -100,7 +99,6 @@ These are exposed by `require('engine.io')`:
 
 ##### Properties
 
-- `version` _(String)_: engine.io version
 - `protocol` _(Number)_: protocol revision number
 - `Server`: Server class constructor
 - `Socket`: Socket class constructor
@@ -130,6 +128,7 @@ These are exposed by `require('engine.io')`:
         changing the `path` directly.
       - `policyFile` (`Boolean`): whether to handle policy file requests (`true`)
       - `destroyUpgrade` (`Boolean`): destroy unhandled upgrade requests (`true`)
+      - **See Server options below for additional options you can pass**
     - **Returns** `Server`
 
 <hr><br>
@@ -156,6 +155,22 @@ to a single process.
 
 ##### Methods
 
+- **constructor**
+    - Initializes the server
+    - **Parameters**
+      - `Object`: optional, options object
+    - **Options**
+      - `pingTimeout` (`Number`): how many ms without a pong packet to
+        consider the connection closed (`60000`)
+      - `pingInterval` (`Number`): how many ms before sending a new ping
+        packet (`25000`)
+      - `transports` (`<Array> String`): transports to allow connections
+        to (`['polling', 'websocket', 'flashsocket']`)
+      - `allowUpgrades` (`Boolean`): whether to allow tranport upgrades
+        (`true`)
+      - `cookie` (`String|Boolean`): name of the HTTP cookie that
+        contains the client sid to send as part of handshake response
+        headers. Set to `false` to not send one. (`io`)
 - `close`
     - Closes all clients
     - **Returns** `Server` for chaining
@@ -198,11 +213,13 @@ A representation of a client. _Inherits from EventEmitter_.
       - `String`: utf-8 string
 - `error`
     - Fired when an error occurs.
+    - **Arguments**
+      - `Error`: error object
 
 ##### Properties
 
 - `server` _(Server)_: engine parent reference
-- `req` _(http.ServerRequest)_: request that originated the Socket
+- `request` _(http.ServerRequest)_: request that originated the Socket
 - `upgraded` _(Boolean)_: whether the transport has been upgraded
 - `readyState` _(String)_: opening|open|closing|closed
 - `transport` _(Transport)_: transport reference
@@ -481,10 +498,10 @@ has you covered.
 
 ### Can I implement `Engine` in other languages?
 
-Absolutely. The `SPEC` file contains the most up to date description of the
-implementation specification at all times. If you're targeting the latest
-stable release of `Engine`, make sure to look at the file in the appropriate git
-branch/tag.
+Absolutely. The [SPEC](https://github.com/LearnBoost/engine.io-client/blob/master/SPEC.md)
+file contains the most up to date description of the implementation specification
+at all times. If you're targeting the latest stable release of `Engine`, make sure
+to look at the file in the appropriate git branch/tag.
 
 The Java/NIO implementation will be officially supported, and is being worked
 on by the author.
